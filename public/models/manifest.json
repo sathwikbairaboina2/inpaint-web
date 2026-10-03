@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "models": [
+    {
+      "id": "migan-512",
+      "task": "inpaint",
+      "file": "migan.onnx",
+      "urls": [
+        "/models/migan.onnx",
+        "https://huggingface.co/andraniksargsyan/migan/resolve/406830d0fa60666da0071c342ad2fbc8f30c5c64/migan.onnx"
+      ],
+      "sha256": "593eba0b7e04730f1b61c0a3cbca68d97d8d6a7ff5c6a44a7b9d7fcd880fc5ae",
+      "bytes": 29546882,
+      "size": 512,
+      "minBufferBytes": 268435456,
+      "io": {
+        "dtype": "uint8",
+        "imageScale": 1,
+        "outputScale": 1,
+        "maskKeep": 255,
+        "maskHole": 0,
+        "inputs": { "image": "image", "mask": "mask" },
+        "output": "result"
+      },
+      "license": "MIT",
+      "source": "https://github.com/Picsart-AI-Research/MI-GAN",
+      "weights": "https://huggingface.co/andraniksargsyan/migan"
+    }
+  ]
+}
