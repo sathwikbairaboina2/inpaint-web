@@ -13,3 +13,5 @@ public/models/*.onnx
 *.tgz
 demo-video/
 bench/results/smoke.json
+tmp-shot-*.png
+.tmp-*
