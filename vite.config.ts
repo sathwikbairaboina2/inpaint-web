@@ -30,5 +30,5 @@ export default defineConfig({
   worker: { format: 'es' },
   server: { port: 5420, strictPort: true, headers: ISOLATION_HEADERS },
   preview: { port: 5421, strictPort: true, headers: ISOLATION_HEADERS },
-  build: { target: 'es2022' },
+  build: { target: 'es2022', rollupOptions: { input: { main: 'index.html', bench: 'bench.html' } } },
 })
