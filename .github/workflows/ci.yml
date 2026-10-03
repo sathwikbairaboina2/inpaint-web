@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6 # pnpm version comes from the packageManager field (9.12.0)
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - name: Cache model
+        uses: actions/cache@v6
+        with:
+          path: public/models/migan.onnx
+          key: model-${{ hashFiles('public/models/manifest.json') }}
+      - run: pnpm models:fetch
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm build:lib && npm pack --dry-run
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm e2e
+        env:
+          CI: '1'
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
