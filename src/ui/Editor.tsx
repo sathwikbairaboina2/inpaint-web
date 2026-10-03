@@ -8,7 +8,7 @@ import { MaskCanvas, type Tool } from './MaskCanvas'
 import { ProgressBar } from './ProgressBar'
 import { paintRGBA, rgbaToPngBlob } from './image'
 
-export type RunSummary = { ep: 'webgpu' | 'wasm'; fallbackReason?: string; timings: Timings }
+export type RunSummary = { ep: 'webgpu' | 'wasm'; fallbackReason?: string; timings: Timings; receivedAt: number }
 
 declare global {
   interface Window {
@@ -71,11 +71,12 @@ export function Editor({ client, image, forceWasm, onLast, onApply }: Props) {
     setProgress({ phase: 'pre', done: 0, total: 1 })
     try {
       const r = await client.inpaint(cur.image, cur.mask, { forceWasm: cur.forceWasm, onProgress: setProgress })
+      const receivedAt = performance.now()
       setResult(r.image)
       setComparing(true)
       latest.current.result = r.image
       onLast({ ep: r.ep, fallbackReason: r.fallbackReason, adapterInfo: r.adapterInfo })
-      return { ep: r.ep, fallbackReason: r.fallbackReason, timings: r.timings }
+      return { ep: r.ep, fallbackReason: r.fallbackReason, timings: r.timings, receivedAt }
     } catch (e) {
       setError(describeError(e))
       throw e

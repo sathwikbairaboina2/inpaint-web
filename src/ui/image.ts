@@ -29,7 +29,7 @@ export function paintRGBA(canvas: HTMLCanvasElement, img: RGBAImage): void {
   canvas.width = img.width
   canvas.height = img.height
   const ctx = canvas.getContext('2d')!
-  ctx.putImageData(new ImageData(new Uint8ClampedArray(img.data), img.width, img.height), 0, 0)
+  ctx.putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.width, img.height), 0, 0)
 }
 
 export async function rgbaToPngBlob(img: RGBAImage): Promise<Blob> {
