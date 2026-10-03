@@ -14,3 +14,4 @@ docs
 tmp-shot-*.png
 .tmp-*
 *.tgz
+.pnpm-store
