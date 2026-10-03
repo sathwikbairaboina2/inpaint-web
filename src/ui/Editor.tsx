@@ -3,9 +3,10 @@ import { describeError } from './errors'
 import type { LastRun } from './DeviceBadge'
 import type { Mask, Progress, Rect, RGBAImage, Timings } from '../core/types'
 import type { InpaintClient } from '../worker/client'
+import { CompareSlider } from './CompareSlider'
 import { MaskCanvas, type Tool } from './MaskCanvas'
 import { ProgressBar } from './ProgressBar'
-import { paintRGBA } from './image'
+import { paintRGBA, rgbaToPngBlob } from './image'
 
 export type RunSummary = { ep: 'webgpu' | 'wasm'; fallbackReason?: string; timings: Timings }
 
@@ -25,11 +26,12 @@ type Props = {
   image: RGBAImage
   forceWasm: boolean
   onLast: (last: LastRun) => void
+  onApply: (image: RGBAImage) => void
 }
 
 const MAX_UNDO = 20
 
-export function Editor({ client, image, forceWasm, onLast }: Props) {
+export function Editor({ client, image, forceWasm, onLast, onApply }: Props) {
   const base = useRef<HTMLCanvasElement>(null)
   const mask = useMemo<Mask>(() => ({ data: new Uint8Array(image.width * image.height), width: image.width, height: image.height }), [image])
   const undoStack = useRef<Uint8Array[]>([])
@@ -41,6 +43,7 @@ export function Editor({ client, image, forceWasm, onLast }: Props) {
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState<Progress | null>(null)
   const [result, setResult] = useState<RGBAImage | null>(null)
+  const [comparing, setComparing] = useState(false)
   const [error, setError] = useState<{ code: string; text: string } | null>(null)
 
   const latest = useRef({ image, result, forceWasm, mask })
@@ -48,6 +51,7 @@ export function Editor({ client, image, forceWasm, onLast }: Props) {
 
   useEffect(() => {
     setResult(null)
+    setComparing(false)
     undoStack.current = []
     setUndoCount(0)
     setHasMask(false)
@@ -55,8 +59,8 @@ export function Editor({ client, image, forceWasm, onLast }: Props) {
   }, [image])
 
   useEffect(() => {
-    if (base.current) paintRGBA(base.current, result ?? image)
-  }, [image, result])
+    if (base.current) paintRGBA(base.current, image)
+  }, [image])
 
   const scan = useCallback(() => setHasMask(mask.data.some((v) => v === 1)), [mask])
 
@@ -68,6 +72,7 @@ export function Editor({ client, image, forceWasm, onLast }: Props) {
     try {
       const r = await client.inpaint(cur.image, cur.mask, { forceWasm: cur.forceWasm, onProgress: setProgress })
       setResult(r.image)
+      setComparing(true)
       latest.current.result = r.image
       onLast({ ep: r.ep, fallbackReason: r.fallbackReason, adapterInfo: r.adapterInfo })
       return { ep: r.ep, fallbackReason: r.fallbackReason, timings: r.timings }
@@ -124,6 +129,18 @@ export function Editor({ client, image, forceWasm, onLast }: Props) {
     setHasMask(false)
   }
 
+  const download = async () => {
+    if (!result) return
+    const url = URL.createObjectURL(await rgbaToPngBlob(result))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `inpaint-${new Date().toISOString().replace(/[:.]/g, '-')}.png`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
   return (
     <main className="editor">
       <div className="toolbar">
@@ -163,7 +180,23 @@ export function Editor({ client, image, forceWasm, onLast }: Props) {
           <strong>{error.code}</strong> {error.text}
         </div>
       )}
-      <div className="stage">
+      {result && comparing && (
+        <>
+          <div className="toolbar">
+            <button className="btn primary" data-testid="download" onClick={() => void download()}>
+              Download PNG
+            </button>
+            <button className="btn" data-testid="apply" onClick={() => onApply(result)}>
+              Apply and keep editing
+            </button>
+            <button className="btn" data-testid="back-to-mask" onClick={() => setComparing(false)}>
+              Back to mask
+            </button>
+          </div>
+          <CompareSlider before={image} after={result} />
+        </>
+      )}
+      <div className="stage" hidden={comparing && !!result}>
         <canvas ref={base} className="base" />
         <MaskCanvas mask={mask} rev={rev} tool={tool} radius={radius} disabled={running} onStrokeStart={onStrokeStart} onStrokeEnd={scan} />
       </div>

@@ -20,7 +20,7 @@ export function App() {
   const [oversize, setOversize] = useState<Oversize | null>(null)
   const [dragging, setDragging] = useState(false)
   const [last, setLast] = useState<LastRun | null>(null)
-  const forceWasm = params.get('ep') === 'wasm'
+  const [forceWasm, setForceWasm] = useState(params.get('ep') === 'wasm')
 
   useEffect(() => {
     void client.probe().then(setDevice)
@@ -77,7 +77,18 @@ export function App() {
     <div className="app">
       <header className="top">
         <h1 className="brand">Inpaint Web</h1>
-        <DeviceBadge device={device} forceWasm={forceWasm} last={last} />
+        <div className="row">
+          <label className="hint">
+            <input
+              data-testid="force-wasm"
+              type="checkbox"
+              checked={forceWasm}
+              onChange={(e) => setForceWasm(e.target.checked)}
+            />{' '}
+            Force WASM
+          </label>
+          <DeviceBadge device={device} forceWasm={forceWasm} last={last} />
+        </div>
       </header>
 
       {error && (
@@ -92,7 +103,7 @@ export function App() {
       )}
 
       {image ? (
-        <Editor client={client} image={image} forceWasm={forceWasm} onLast={setLast} />
+        <Editor client={client} image={image} forceWasm={forceWasm} onLast={setLast} onApply={setImage} />
       ) : (
         <main
           className={`drop${dragging ? ' drag' : ''}`}
