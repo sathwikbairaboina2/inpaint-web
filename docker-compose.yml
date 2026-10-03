@@ -1,0 +1,30 @@
+name: inpaint-web
+
+services:
+  app:
+    build: .
+    container_name: inpaint-web-app
+    ports:
+      - "5422:8080"
+
+  e2e:
+    profiles: [e2e]
+    container_name: inpaint-web-e2e
+    image: mcr.microsoft.com/playwright:v1.63.0-noble
+    working_dir: /work
+    # share the app's network namespace so the page is on http://localhost:8080 (a secure context:
+    # service worker, Cache Storage and crossOriginIsolated all work, as they do for a real visitor)
+    network_mode: service:app
+    volumes:
+      - .:/work
+      - inpaint-web-e2e-node-modules:/work/node_modules
+    environment:
+      BASE_URL: http://localhost:8080
+      CI: "1"
+    depends_on:
+      - app
+    command: sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm exec playwright test"
+
+volumes:
+  inpaint-web-e2e-node-modules:
+    name: inpaint-web-e2e-node-modules

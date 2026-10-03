@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-lib
+dev-dist
+coverage
+test-results
+playwright-report
+.git
+.superpowers
+.env*
+public/models/*.onnx
+bench/results
+docs
+tmp-shot-*.png
+.tmp-*
+*.tgz

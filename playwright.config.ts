@@ -12,7 +12,7 @@ export default defineConfig({
     baseURL,
     // host runs use installed Chrome (has WebGPU); CI and the container use bundled Chromium
     channel: process.env.CI ? undefined : 'chrome',
-    launchOptions: { args: ['--enable-unsafe-webgpu'] },
+    launchOptions: { args: process.env.CI ? [] : ['--enable-unsafe-webgpu'] },
   },
   projects: [{ name: 'chromium' }],
   webServer: process.env.BASE_URL
