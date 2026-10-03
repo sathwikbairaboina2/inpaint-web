@@ -15,3 +15,4 @@ demo-video/
 bench/results/smoke.json
 tmp-shot-*.png
 .tmp-*
+.pnpm-store/
