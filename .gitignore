@@ -1,0 +1,15 @@
+node_modules
+dist
+dist-lib
+dev-dist
+coverage
+test-results
+playwright-report
+*.log
+.env*
+!.env*.example
+.superpowers/
+public/models/*.onnx
+*.tgz
+demo-video/
+bench/results/smoke.json
