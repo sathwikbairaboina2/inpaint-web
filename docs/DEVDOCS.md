@@ -6,8 +6,9 @@ A browser tool that removes objects from photos. You paint over the object and a
 hole. It runs on your device with onnxruntime-web, on WebGPU when available and on threaded WASM otherwise. Nothing is
 uploaded.
 
-Headline number, from `bench/results/latest.json` (commit 3d2db99, Chrome 154, one machine, loaded host): the model run is
-**43.53x faster on WebGPU than on WASM** (50.2 ms against 2184.4 ms median, 20 runs, 512x512 image, 128x128 hole).
+Headline number, from `bench/results/latest.json` (commit fe495ab, Chrome 154, one machine, loaded host): the model run is
+**38.91x faster on WebGPU than on WASM**, the median of 5 per-round speedups (headline round: 39.7 ms against 1543.3 ms
+median, 20 runs per EP per round, 512x512 image, 128x128 hole).
 
 ## 2. Five-minute quickstart
 

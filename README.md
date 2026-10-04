@@ -2,14 +2,14 @@
 
 > In-browser object removal. Paint over an object and a 29 MB model fills it in, entirely on your device.
 
-Remove objects from photos in your browser, 43x faster on WebGPU than WASM, zero uploads.
+**Remove objects from photos in your browser, 38x faster on WebGPU than WASM, zero uploads.**
 
 <!-- readme-header -->
 [![CI](https://github.com/sathwikbairaboina2/inpaint-web/actions/workflows/ci.yml/badge.svg)](https://github.com/sathwikbairaboina2/inpaint-web/actions/workflows/ci.yml) ![License: MIT](https://img.shields.io/badge/license-MIT-blue) ![TypeScript](https://img.shields.io/badge/-TypeScript-555) ![onnxruntime-web](https://img.shields.io/badge/-onnxruntime--web-555) ![WebGPU](https://img.shields.io/badge/-WebGPU-555)
 
 | Measured | Source |
 |---|---|
-| **43.5× WebGPU vs WASM** | `bench/results/latest.json` |
+| **38.9× WebGPU vs WASM** (median of 5 rounds) | `bench/results/latest.json` |
 
 Paint over something you want gone and the model fills it in. It runs in your tab with onnxruntime-web: WebGPU when the
 device has it, multi-threaded WASM when it does not. Photos never leave the page. After the first visit it works offline.
@@ -45,15 +45,15 @@ Reproduce with `pnpm bench`.
 
 | EP | Threads | Device | Run median (ms) | Run p90 (ms) | Session create (ms) |
 |---|---|---|---|---|---|
-| webgpu | 1 | nvidia lovelace | 50.2 | 82.5 | 6689.0 |
-| wasm | 16 | AMD Ryzen 9 7900X 12-Core Processor | 2184.4 | 2658.6 | 695.7 |
+| webgpu | 1 | nvidia lovelace | 39.7 | 61.2 | 869.4 |
+| wasm | 16 | AMD Ryzen 9 7900X 12-Core Processor | 1543.3 | 1704.2 | 357.2 |
 
-Speedup (wasm median / webgpu median): 43.53x. 20 timed runs per EP after 1 warm-up, 512x512 image, 128x128 hole.
-Chrome 154.0.8037.97, commit 3d2db99 (dirty: false), 2026-10-04.
+Speedup: 38.91x, the median of 5 per-round speedups (19.16, 41.03, 13.27, 38.91, 39.84); the row values above are that round. Each round runs webgpu and wasm back to back. 20 timed runs per EP per round after 1 warm-up, 512x512 image, 128x128 hole.
+Chrome 154.0.8037.97, commit fe495ab (dirty: false), 2026-10-04.
 
 Read this with care. It is one machine (an RTX 4090 class GPU, adapter reported as "nvidia lovelace") in headless Chrome.
-The host was busy with other builds during the run, which is why the WASM numbers spread widely (run min 519.7 ms,
-median 2184.4 ms; the same file has the full distribution). "Run" is the model call plus output readback, not the whole
+The host was busy with other builds during the run, which is why the per-round speedups spread from 13x to 41x; the
+headline is their median, so one noisy round cannot set it (all rounds are in the same file). "Run" is the model call plus output readback, not the whole
 job. Phones will be much slower. The method is in [ADR 0008](docs/adr/0008-benchmark-method.md).
 
 ## How it works
@@ -118,7 +118,7 @@ Upscale with a self-exported Real-ESRGAN, LaMa as a high-quality option, npm pub
 pnpm typecheck && pnpm test      # unit, property and golden tests
 pnpm e2e                         # Playwright against vite preview on :5421
 pnpm build                       # dist/ with dist/ort, dist/sw.js, dist/bench.html
-pnpm bench                       # writes bench/results/latest.json
+pnpm bench                       # 5 rounds by default, writes bench/results/latest.json
 ```
 
 See [docs/DEVDOCS.md](docs/DEVDOCS.md) for the full developer guide, [MODELS.md](MODELS.md) for model licenses and hashes,

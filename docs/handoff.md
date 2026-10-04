@@ -39,3 +39,10 @@
 - Dockerfile installs with `--ignore-scripts`. CI uses the latest action majors found with `gh api` and takes the pnpm version
   from `packageManager`. `vite.lib.config.ts` sets `publicDir: false` so the model is not packed.
 - The benchmark was run once; the WASM spread is wide because sibling builds loaded the host.
+
+## 2026-10-04, Claude (Opus), branch main: bench re-run for CI
+
+- Changed: `bench/results/latest.json` was still the single-pass file from 3d2db99, so `tests/bench-shape.test.ts` (multi-round
+  shape) failed in CI. Re-ran `pnpm bench` (5 rounds, clean tree at fe495ab, RTX 4090, host loaded by other agents): 38.91x,
+  per-round 19.16 / 41.03 / 13.27 / 38.91 / 39.84. Updated the README headline, table and DEVDOCS to match.
+- Verify: `pnpm vitest run tests/bench-shape.test.ts`; `node scripts/bench-table.mjs` matches the README table.
