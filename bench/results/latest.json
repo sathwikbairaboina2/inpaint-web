@@ -1,0 +1,71 @@
+{
+  "runs": 20,
+  "image": {
+    "width": 512,
+    "height": 512
+  },
+  "hole": {
+    "x": 192,
+    "y": 192,
+    "w": 128,
+    "h": 128
+  },
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+  "hardwareConcurrency": 24,
+  "crossOriginIsolated": true,
+  "adapter": "nvidia lovelace",
+  "gpuDescription": null,
+  "webgpu": {
+    "ep": "webgpu",
+    "threads": 1,
+    "sessionMs": 6689.030000001192,
+    "run": {
+      "n": 20,
+      "min": 31.934999998658895,
+      "median": 50.17750000022352,
+      "p90": 82.52999999932945,
+      "max": 173.8300000000745,
+      "mean": 65.05525000011548
+    },
+    "total": {
+      "n": 20,
+      "min": 64.16500000096858,
+      "median": 98.43999999947846,
+      "p90": 167.285000000149,
+      "max": 227.785000000149,
+      "mean": 108.94775000009686
+    }
+  },
+  "wasm": {
+    "ep": "wasm",
+    "threads": 16,
+    "sessionMs": 695.7050000000745,
+    "run": {
+      "n": 20,
+      "min": 519.7249999996275,
+      "median": 2184.3899999996647,
+      "p90": 2658.6349999997765,
+      "max": 3543.260000001639,
+      "mean": 1964.51650000019
+    },
+    "total": {
+      "n": 20,
+      "min": 556.1650000009686,
+      "median": 2244.3899999996647,
+      "p90": 2697.160000000149,
+      "max": 3590.445000000298,
+      "mean": 2021.5462499999442
+    }
+  },
+  "speedup": 43.53,
+  "date": "2026-10-04T00:01:40.873Z",
+  "gitSha": "3d2db99",
+  "dirty": false,
+  "chrome": "154.0.8037.97",
+  "machine": {
+    "cpu": "AMD Ryzen 9 7900X 12-Core Processor",
+    "logicalCores": 24,
+    "totalMemGB": 63,
+    "platform": "win32"
+  }
+}
