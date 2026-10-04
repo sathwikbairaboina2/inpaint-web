@@ -1,6 +1,15 @@
+# 🪄 Inpaint Web
+
+> In-browser object removal. Paint over an object and a 29 MB model fills it in, entirely on your device.
+
 Remove objects from photos in your browser, 43x faster on WebGPU than WASM, zero uploads.
 
-# Inpaint Web
+<!-- readme-header -->
+[![CI](https://github.com/sathwikbairaboina2/inpaint-web/actions/workflows/ci.yml/badge.svg)](https://github.com/sathwikbairaboina2/inpaint-web/actions/workflows/ci.yml) ![License: MIT](https://img.shields.io/badge/license-MIT-blue) ![TypeScript](https://img.shields.io/badge/-TypeScript-555) ![onnxruntime-web](https://img.shields.io/badge/-onnxruntime--web-555) ![WebGPU](https://img.shields.io/badge/-WebGPU-555)
+
+| Measured | Source |
+|---|---|
+| **43.5× WebGPU vs WASM** | `bench/results/latest.json` |
 
 Paint over something you want gone and the model fills it in. It runs in your tab with onnxruntime-web: WebGPU when the
 device has it, multi-threaded WASM when it does not. Photos never leave the page. After the first visit it works offline.
