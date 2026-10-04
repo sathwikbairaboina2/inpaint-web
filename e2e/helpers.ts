@@ -11,8 +11,13 @@ export type RunReport = {
   fallbackReason?: string
   changedOutside: number
   changedInside: number
+  meanDiffInside: number
   timings: Record<string, number>
 }
+
+// the hole must really be re-synthesised, not just resampled: with an inverted mask convention the bilinear round trip alone
+// would still change pixels, so assert a mean RGB difference well above that
+export const MIN_MEAN_DIFF_INSIDE = 8
 
 export const isLocalhost = () => new URL(process.env.BASE_URL ?? 'http://localhost:5421').hostname === 'localhost'
 
@@ -30,15 +35,18 @@ export async function runMask(page: Page, rect: Rect): Promise<RunReport> {
     const c = hook.getResult()!
     let changedOutside = 0
     let changedInside = 0
+    let sumInside = 0
     for (let y = 0; y < a.height; y++) {
       for (let x = 0; x < a.width; x++) {
         const inMask = x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h
         for (let k = 0; k < 4; k++) {
-          if (a.data[(y * a.width + x) * 4 + k] !== c.data[(y * a.width + x) * 4 + k]) inMask ? changedInside++ : changedOutside++
+          const d = Math.abs(a.data[(y * a.width + x) * 4 + k] - c.data[(y * a.width + x) * 4 + k])
+          if (d !== 0) inMask ? changedInside++ : changedOutside++
+          if (inMask && k < 3) sumInside += d
         }
       }
     }
-    return { ep: summary.ep, fallbackReason: summary.fallbackReason, timings: summary.timings as unknown as Record<string, number>, changedOutside, changedInside }
+    return { ep: summary.ep, fallbackReason: summary.fallbackReason, timings: summary.timings as unknown as Record<string, number>, changedOutside, changedInside, meanDiffInside: sumInside / (r.w * r.h * 3) }
   }, rect)
 }
 

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { hasWebGpu, openSample, runMask } from './helpers'
+import { MIN_MEAN_DIFF_INSIDE, hasWebGpu, openSample, runMask } from './helpers'
 
 const RECT = { x: 400, y: 300, w: 120, h: 120 }
 
@@ -18,6 +18,7 @@ test('without WebGPU the job still completes on WASM with a real reason', async 
   test.skip(await hasWebGpu(page), 'host has WebGPU (tests/ep.test.ts covers every fallback reason)')
   const r = await runMask(page, RECT)
   expect(r.ep).toBe('wasm')
+  expect(r.meanDiffInside).toBeGreaterThan(MIN_MEAN_DIFF_INSIDE)
   expect(['no-webgpu-api', 'no-adapter']).toContain(r.fallbackReason)
   await expect(page.getByTestId('device-badge')).toContainText(r.fallbackReason!)
 })

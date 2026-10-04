@@ -53,17 +53,27 @@ async function readAll(res: Response, fallbackTotal: number, onProgress?: (p: Pr
   return out
 }
 
+// the cache is an optimisation: a failing get/put/keys/delete is skipped, never fatal
+async function bestEffort<T>(op: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await op()
+  } catch (e) {
+    console.warn('model cache unavailable:', e instanceof Error ? e.message : e)
+    return fallback
+  }
+}
+
 export async function loadModel(model: ModelEntry, deps: LoadDeps): Promise<Uint8Array> {
   const prefix = `models/${model.id}/`
   const key = `${prefix}${model.sha256}`
 
-  const cached = await deps.cache.get(key)
+  const cached = await bestEffort(() => deps.cache.get(key), undefined)
   if (cached) {
     if ((await sha256Hex(cached)) === model.sha256) {
       deps.onProgress?.({ phase: 'download', done: cached.length, total: cached.length })
       return cached
     }
-    await deps.cache.delete(key)
+    await bestEffort(() => deps.cache.delete(key), undefined)
   }
 
   let mismatch = false
@@ -81,8 +91,10 @@ export async function loadModel(model: ModelEntry, deps: LoadDeps): Promise<Uint
         failures.push(`${url}: sha256 mismatch`)
         continue
       }
-      await deps.cache.put(key, bytes)
-      for (const k of await deps.cache.keys()) if (k.startsWith(prefix) && k !== key) await deps.cache.delete(k)
+      await bestEffort(async () => {
+        await deps.cache.put(key, bytes)
+        for (const k of await deps.cache.keys()) if (k.startsWith(prefix) && k !== key) await deps.cache.delete(k)
+      }, undefined)
       return bytes
     } catch (e) {
       failures.push(`${url}: ${e instanceof Error ? e.message : String(e)}`)

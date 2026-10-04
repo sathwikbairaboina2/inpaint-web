@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { isLocalhost, openSample, runMask } from './helpers'
+import { MIN_MEAN_DIFF_INSIDE, isLocalhost, openSample, runMask } from './helpers'
 
 const RECT = { x: 400, y: 300, w: 120, h: 120 }
 
@@ -10,6 +10,7 @@ test('wasm: pixels outside the mask are byte-identical, pixels inside change', a
   expect(r.ep).toBe('wasm')
   expect(r.changedOutside).toBe(0)
   expect(r.changedInside).toBeGreaterThan(0)
+  expect(r.meanDiffInside).toBeGreaterThan(MIN_MEAN_DIFF_INSIDE)
 })
 
 test('default provider: same invariant on whichever EP was chosen', async ({ page }) => {
@@ -18,4 +19,5 @@ test('default provider: same invariant on whichever EP was chosen', async ({ pag
   test.info().annotations.push({ type: 'ep', description: `${r.ep} ${r.fallbackReason ?? ''}`.trim() })
   expect(r.changedOutside).toBe(0)
   expect(r.changedInside).toBeGreaterThan(0)
+  expect(r.meanDiffInside).toBeGreaterThan(MIN_MEAN_DIFF_INSIDE)
 })

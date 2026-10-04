@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { isLocalhost, openSample, runMask } from './helpers'
+import { MIN_MEAN_DIFF_INSIDE, isLocalhost, openSample, runMask } from './helpers'
 
 const RECT = { x: 400, y: 300, w: 120, h: 120 }
 
@@ -30,6 +30,7 @@ test('works offline after the first visit and makes no model requests', async ({
   const second = await runMask(page, RECT)
   expect(second.changedOutside).toBe(0)
   expect(second.changedInside).toBeGreaterThan(0)
+  expect(second.meanDiffInside).toBeGreaterThan(MIN_MEAN_DIFF_INSIDE)
   expect(urls.filter((u) => /migan\.onnx|huggingface\.co/.test(u))).toEqual([])
   expect(failed).toEqual([])
   await context.setOffline(false)

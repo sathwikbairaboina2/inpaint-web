@@ -6,7 +6,7 @@ import type { DeviceEvent } from '../worker/protocol'
 import { DeviceBadge, type LastRun } from './DeviceBadge'
 import { Editor } from './Editor'
 import { describeError } from './errors'
-import { bitmapToRGBA, decodeBitmap, fitWithinBudget } from './image'
+import { bitmapToRGBA, decodeBitmap, fitWithinBudget, sniffBlobSize } from './image'
 
 type Oversize = { blob: Blob; fit: { width: number; height: number }; width: number; height: number }
 
@@ -23,13 +23,22 @@ export function App() {
   const [forceWasm, setForceWasm] = useState(params.get('ep') === 'wasm')
 
   useEffect(() => {
-    void client.probe().then(setDevice)
+    client.probe().then(setDevice, (e) => setError(describeError(e)))
   }, [client])
 
   const loadBlob = useCallback(async (blob: Blob, size?: { width: number; height: number }) => {
     setError(null)
     setOversize(null)
     try {
+      if (!size) {
+        // refuse an oversized photo from its header, before allocating width x height x 4 bytes
+        const head = await sniffBlobSize(blob)
+        if (head && (Math.max(head.width, head.height) > MAX_SIDE || head.width * head.height > MAX_PIXELS)) {
+          setError(describeError(new InpaintError('TOO_LARGE', 'too large')))
+          setOversize({ blob, fit: fitWithinBudget(head.width, head.height), width: head.width, height: head.height })
+          return
+        }
+      }
       const bitmap = await decodeBitmap(blob, size)
       try {
         if (!size && (Math.max(bitmap.width, bitmap.height) > MAX_SIDE || bitmap.width * bitmap.height > MAX_PIXELS)) {

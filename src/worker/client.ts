@@ -19,7 +19,7 @@ export function createInpaintClient(): InpaintClient {
     string,
     { resolve: (r: ClientResult) => void; reject: (e: unknown) => void; onProgress?: (p: Progress) => void }
   >()
-  let probes: ((d: DeviceEvent) => void)[] = []
+  let probes: { resolve: (d: DeviceEvent) => void; reject: (e: unknown) => void }[] = []
   let seq = 0
 
   worker.onmessage = (ev: MessageEvent<JobEvent>) => {
@@ -27,7 +27,13 @@ export function createInpaintClient(): InpaintClient {
     if (e.kind === 'device') {
       const waiting = probes
       probes = []
-      waiting.forEach((r) => r(e))
+      waiting.forEach((r) => r.resolve(e))
+      return
+    }
+    if (e.kind === 'probe-error') {
+      const waiting = probes
+      probes = []
+      waiting.forEach((r) => r.reject(new InpaintError('INTERNAL', e.message)))
       return
     }
     const job = jobs.get(e.jobId)
@@ -54,12 +60,15 @@ export function createInpaintClient(): InpaintClient {
     const err = new InpaintError('INTERNAL', ev.message || 'worker crashed')
     for (const j of jobs.values()) j.reject(err)
     jobs.clear()
+    const waiting = probes
+    probes = []
+    waiting.forEach((r) => r.reject(err))
   }
 
   return {
     probe() {
-      return new Promise((resolve) => {
-        probes.push(resolve)
+      return new Promise((resolve, reject) => {
+        probes.push({ resolve, reject })
         worker.postMessage({ kind: 'probe' })
       })
     },

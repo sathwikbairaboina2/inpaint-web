@@ -41,6 +41,8 @@ self.onmessage = (ev: MessageEvent<JobRequest>) => {
     (err) => {
       if (ev.data.kind === 'inpaint') {
         self.postMessage({ kind: 'error', jobId: ev.data.jobId, code: 'INTERNAL', message: String(err) })
+      } else {
+        self.postMessage({ kind: 'probe-error', message: String(err) })
       }
     },
   )

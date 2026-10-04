@@ -32,4 +32,5 @@ export type DeviceEvent = {
   threads: number
   crossOriginIsolated: boolean
 }
-export type JobEvent = ProgressEvent | ResultEvent | ErrorEvent | DeviceEvent
+export type ProbeErrorEvent = { kind: 'probe-error'; message: string }
+export type JobEvent = ProgressEvent | ResultEvent | ErrorEvent | DeviceEvent | ProbeErrorEvent

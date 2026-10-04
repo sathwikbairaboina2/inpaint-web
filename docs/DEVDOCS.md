@@ -99,4 +99,4 @@ container e2e shares the app's network so the page is on `localhost` (a secure c
 - Container and CI e2e do not exercise WebGPU.
 - The 100 ms long-task check covers the job window; painting the result in a software-rendered container can exceed it
   once and is only reported.
-- Not published or deployed (no remotes in this session). Upscale, LaMa option, npm publish, deploy, fp16 and WebNN are next.
+- Not published or deployed (no remotes in this session). Upscale, LaMa option, npm publish (needs its own library manifest, the root one is the app's), deploy, fp16 and WebNN are next.

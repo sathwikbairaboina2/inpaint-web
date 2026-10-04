@@ -71,6 +71,10 @@ export function createEngine(deps: EngineDeps): Engine {
   const model = getModel(deps.manifest, deps.modelId ?? 'migan-512')
   const now = deps.now ?? (() => performance.now())
 
+  // ort registers one wasm backend for webgpu, cpu and wasm and reads numThreads once, on its first init,
+  // so this must be set before any create whichever EP comes first
+  ort.env.wasm.numThreads = wasmThreads(deps.crossOriginIsolated, deps.hardwareConcurrency)
+
   let bytes: Promise<Uint8Array> | null = null
   const sessionsByEp = new Map<EpName, Promise<OrtSessionLike>>()
   const selections = new Map<boolean, Promise<Selection<OrtSessionLike>>>()
@@ -79,7 +83,6 @@ export function createEngine(deps: EngineDeps): Engine {
     const existing = sessionsByEp.get(ep)
     if (existing) return existing
     const p = (async () => {
-      if (ep === 'wasm') ort.env.wasm.numThreads = wasmThreads(deps.crossOriginIsolated, deps.hardwareConcurrency)
       return ort.InferenceSession.create(await bytes!, { executionProviders: [ep], graphOptimizationLevel: 'all' })
     })()
     sessionsByEp.set(ep, p)

@@ -1,4 +1,4 @@
-# ADR 0009: "Installable" means an offline PWA now and a library build ready to publish
+# ADR 0009: "Installable" means an offline PWA now and a pack-verified library build
 
 Date: 2026-10-04. Status: accepted.
 
@@ -11,8 +11,11 @@ This session has no npm credentials and must not push.
   with `maximumFileSizeToCacheInBytes` raised to 40 MB. The model stays in the loader's Cache Storage, not in the precache.
   `e2e/offline.spec.ts` proves that a second visit works offline with zero network requests during inference.
 - `src/core/index.ts` is the library surface. `pnpm build:lib` (Vite library mode for the ES module, `tsc` for `.d.ts`) and
-  `npm pack --dry-run` run in CI, so publishing as `@sathwik/browser-img-ops` is one command away.
+  `npm pack --dry-run` run in CI. This proves the build and the tarball contents only. It is pack-verified, not
+  publish-ready: the root `package.json` is the app's (`private`, React in its dependencies). A release needs a
+  library manifest named `@sathwik/browser-img-ops` (for example in `packages/core`) with `onnxruntime-web` as an
+  optional peer dependency.
 
 ## Consequences
 - Users can install the app from the browser and use it offline today.
-- What we gave up: a real npm release (and its download count) until the user publishes it.
+- What we gave up: a real npm release (and its download count) until that manifest exists and the user publishes it.

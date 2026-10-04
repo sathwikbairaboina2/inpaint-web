@@ -69,8 +69,19 @@ export function Editor({ client, image, forceWasm, onLast, onApply }: Props) {
     setRunning(true)
     setError(null)
     setProgress({ phase: 'pre', done: 0, total: 1 })
+    // the worker posts one event per download chunk; render at most one per animation frame
+    let pending: Progress | null = null
+    let frame = 0
+    const onProgress = (p: Progress) => {
+      pending = p
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        if (pending) setProgress(pending)
+      })
+    }
     try {
-      const r = await client.inpaint(cur.image, cur.mask, { forceWasm: cur.forceWasm, onProgress: setProgress })
+      const r = await client.inpaint(cur.image, cur.mask, { forceWasm: cur.forceWasm, onProgress })
       const receivedAt = performance.now()
       setResult(r.image)
       setComparing(true)
@@ -81,6 +92,8 @@ export function Editor({ client, image, forceWasm, onLast, onApply }: Props) {
       setError(describeError(e))
       throw e
     } finally {
+      pending = null
+      if (frame) cancelAnimationFrame(frame)
       setRunning(false)
       setProgress(null)
     }

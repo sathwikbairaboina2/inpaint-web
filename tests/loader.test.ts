@@ -112,4 +112,18 @@ describe('loadModel', () => {
     await loadModel(m, { fetch: f.fetch, cache })
     expect(f.calls.length).toBe(1)
   })
+
+  it('a cache whose get and put reject still returns the verified bytes from the first url', async () => {
+    const m = await entry(['/a'])
+    const f = fakeFetch({ '/a': { bytes: good } })
+    const broken = {
+      get: async () => Promise.reject(new Error('storage blocked')),
+      put: async () => Promise.reject(new Error('QuotaExceededError')),
+      keys: async () => Promise.reject(new Error('storage blocked')),
+      delete: async () => Promise.reject(new Error('storage blocked')),
+    }
+    const out = await loadModel(m, { fetch: f.fetch, cache: broken })
+    expect(Array.from(out)).toEqual(Array.from(good))
+    expect(f.calls).toEqual(['/a'])
+  })
 })

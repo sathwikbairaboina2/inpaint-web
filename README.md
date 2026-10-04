@@ -84,7 +84,9 @@ the real MI-GAN through onnxruntime-node) and in the browser.
 - App: open the site in Chrome or Edge and use "Install". The service worker caches the shell and the ORT runtime. The
   model is cached in Cache Storage after the first run.
 - Library: `src/core` builds on its own (`pnpm build:lib`, then `npm pack --dry-run` shows the tarball). The package is
-  `private` on purpose; to publish it as `@sathwik/browser-img-ops`, rename it in `package.json` and run `npm publish`.
+  pack-verified, not publish-ready: `package.json` is the app's (`inpaint-web`, `private`, with React among its dependencies),
+  so a real release needs its own manifest named `@sathwik/browser-img-ops` with `onnxruntime-web` as an optional peer
+  dependency.
   Exports: `createEngine`, `loadModel`, `selectProvider`, `compositeMasked`, `planCrop`, `checkImageBudget` and more.
 
 ## Known limits

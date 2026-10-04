@@ -4,11 +4,20 @@ import { openSample } from './helpers'
 test('inference never blocks the main thread for more than 100 ms', async ({ page }) => {
   await openSample(page, 'ep=wasm')
   const result = await page.evaluate(async () => {
-    const tasks: { start: number; duration: number }[] = []
+    const tasks: { start: number; duration: number; attribution: string }[] = []
     new PerformanceObserver((list) => {
-      for (const e of list.getEntries()) tasks.push({ start: e.startTime, duration: e.duration })
+      for (const e of list.getEntries()) {
+        const attr = ((e as unknown as { attribution?: { name: string; containerType?: string; containerSrc?: string }[] }).attribution ?? [])
+          .map((a) => [a.name, a.containerType, a.containerSrc].filter(Boolean).join('/'))
+          .join(',')
+        tasks.push({ start: e.startTime, duration: e.duration, attribution: attr || 'none' })
+      }
     }).observe({ type: 'longtask', buffered: true })
     window.__inpaint!.setMask([{ x: 400, y: 300, w: 120, h: 120 }])
+    // the hook's own re-render and full-mask redraw run in later tasks: let them finish before t0 so they are not counted
+    const frame = () => new Promise((res) => requestAnimationFrame(() => res(undefined)))
+    await frame()
+    await frame()
     const t0 = performance.now()
     const summary = await window.__inpaint!.run()
     const t1 = summary.receivedAt

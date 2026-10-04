@@ -17,7 +17,7 @@ README first line format (N filled from `bench/results/latest.json`, never typed
 |---|---|
 | 30-second wow | Open the page, click "Try sample" (public-domain Apollo 11 photo), brush over something, click "Remove object". Works on a phone through the WASM path. README hero is a before/after image pair captured by Playwright from the real app. |
 | Measured headline number | `pnpm bench` drives headless host Chrome (WebGPU on the host GPU) and writes `bench/results/latest.json` with the WebGPU vs WASM speedup of the MI-GAN run phase. README quotes it. |
-| Something installable | (a) The app is an installable PWA that works offline after the first visit. (b) `src/core` builds as a library (`pnpm build:lib`) and `npm pack --dry-run` passes, ready to publish as `@sathwik/browser-img-ops` (not published: no push in this session). |
+| Something installable | (a) The app is an installable PWA that works offline after the first visit. (b) `src/core` builds as a library (`pnpm build:lib`) and `npm pack --dry-run` passes (pack-verified, not publish-ready: the root manifest is the app's, so a release needs its own `@sathwik/browser-img-ops` manifest; not published: no push in this session). |
 | Honest ADRs | `docs/adr/0001`-`0009`, each with "what we gave up". |
 | CI with tests | `.github/workflows/ci.yml`: typecheck, unit + property tests, golden-model test (onnxruntime-node), build, Playwright e2e on the WASM path. |
 
@@ -226,7 +226,7 @@ per EP `sessionMs` and `summarize()` of `runMs` (session.run + output readback) 
 starts `vite preview` (port 5421), launches Playwright `chromium` with `channel: 'chrome'`, `headless: true`,
 `args: ['--enable-unsafe-webgpu']`, reads the result object, adds machine info (`navigator.userAgent`, adapter
 `info.vendor/architecture/description`, `hardwareConcurrency`, wasm threads, `crossOriginIsolated`, date, git sha), computes
-`speedup = wasm.run.median / webgpu.run.median` (2 decimals), writes `bench/results/latest.json` and appends a copy as
+`speedup` = median of the per-round `wasm.run.median / webgpu.run.median` over `--rounds` (default 5, min 3) back-to-back rounds (2 decimals; review fix, see ADR 0008), writes `bench/results/latest.json` and appends a copy as
 `bench/results/<ISO date>-<sha>.json`. If WebGPU is unavailable it writes the WASM numbers with `webgpu: null` and
 `speedup: null` and exits 2. README and DEVDOCS quote only these files.
 

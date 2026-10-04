@@ -111,6 +111,15 @@ describe('engine', () => {
     expect(s.stats.threadsAtCreate).toEqual([16])
   })
 
+  it('sets wasm numThreads before the first create even when that create is webgpu', async () => {
+    const s = setup()
+    await s.engine.inpaint(img, mask, {})
+    expect(s.stats.creates[0]).toBe('webgpu')
+    expect(s.stats.threadsAtCreate[0]).toBe(16)
+    await s.engine.inpaint(img, mask, { forceWasm: true })
+    expect(s.stats.threadsAtCreate).toEqual([16, 16])
+  })
+
   it('dispose releases sessions', async () => {
     const s = setup()
     await s.engine.inpaint(img, mask, {})

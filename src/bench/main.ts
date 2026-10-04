@@ -10,8 +10,11 @@ export type EpResult = {
   total: Summary
 }
 
+export type Round = { webgpu: EpResult | null; wasm: EpResult }
+
 export type BenchResult = {
   runs: number
+  rounds: Round[]
   image: { width: number; height: number }
   hole: { x: number; y: number; w: number; h: number }
   userAgent: string
@@ -19,12 +22,11 @@ export type BenchResult = {
   crossOriginIsolated: boolean
   adapter: string | null
   gpuDescription: string | null
-  webgpu: EpResult | null
-  wasm: EpResult
 }
 
 const params = new URLSearchParams(location.search)
 const runs = Math.max(1, Number(params.get('runs') ?? 20))
+const rounds = Math.max(1, Number(params.get('rounds') ?? 5))
 const SIZE = 512
 const HOLE = { x: 192, y: 192, w: 128, h: 128 }
 
@@ -70,27 +72,42 @@ async function gpuDescription(): Promise<string | null> {
 }
 
 async function main(): Promise<void> {
-  const gpu = await measure('webgpu')
-  const wasm = await measure('wasm')
+  // each round measures webgpu and wasm back to back, alternating which goes first, so a change in host load
+  // hits both EPs of a round and the per-round ratio stays meaningful
+  const all: Round[] = []
+  let adapter: string | null = null
+  for (let i = 0; i < rounds; i++) {
+    let gpu: Awaited<ReturnType<typeof measure>>
+    let wasm: Awaited<ReturnType<typeof measure>>
+    if (i % 2 === 0) {
+      gpu = await measure('webgpu')
+      wasm = await measure('wasm')
+    } else {
+      wasm = await measure('wasm')
+      gpu = await measure('webgpu')
+    }
+    adapter ??= gpu.adapter
+    all.push({ webgpu: gpu.result, wasm: wasm.result! })
+  }
   const result: BenchResult = {
     runs,
+    rounds: all,
     image: { width: SIZE, height: SIZE },
     hole: HOLE,
     userAgent: navigator.userAgent,
     hardwareConcurrency: navigator.hardwareConcurrency,
     crossOriginIsolated: self.crossOriginIsolated,
-    adapter: gpu.adapter,
+    adapter,
     gpuDescription: await gpuDescription(),
-    webgpu: gpu.result,
-    wasm: wasm.result!,
   }
   ;(window as unknown as { __benchResult: BenchResult }).__benchResult = result
-  const rows = [result.webgpu, result.wasm]
-    .filter((r): r is EpResult => !!r)
-    .map((r) => `<tr><td>${r.ep}</td><td>${r.threads}</td><td>${r.sessionMs.toFixed(0)}</td><td>${r.run.median.toFixed(1)}</td><td>${r.run.p90.toFixed(1)}</td></tr>`)
+  const rows = all
+    .flatMap((r, i) => [r.webgpu, r.wasm].map((x) => [i + 1, x] as const))
+    .filter((p): p is readonly [number, EpResult] => !!p[1])
+    .map(([n, r]) => `<tr><td>${n} ${r.ep}</td><td>${r.threads}</td><td>${r.sessionMs.toFixed(0)}</td><td>${r.run.median.toFixed(1)}</td><td>${r.run.p90.toFixed(1)}</td></tr>`)
     .join('')
   document.getElementById('out')!.innerHTML =
-    `<table><tr><th>ep</th><th>threads</th><th>session ms</th><th>run median ms</th><th>run p90 ms</th></tr>${rows}</table>`
+    `<table><tr><th>round ep</th><th>threads</th><th>session ms</th><th>run median ms</th><th>run p90 ms</th></tr>${rows}</table>`
 }
 
 void main().catch((e) => {

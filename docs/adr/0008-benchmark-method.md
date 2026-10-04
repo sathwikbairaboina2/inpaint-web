@@ -12,7 +12,11 @@ The README headline must be measured, never typed. The prototype showed that WAS
   median and p90. Whole-job time is reported too.
 - `bench/run.ts` drives headless host Chrome (`channel: 'chrome'`, `--enable-unsafe-webgpu`) with Playwright against
   `vite preview`, records machine info, and writes `bench/results/latest.json` plus a dated copy.
-- Headline: `speedup = wasm.run.median / webgpu.run.median`, rounded to 2 decimals in the JSON and rounded down to a whole
+- Review fix: one pass over all of WebGPU and then all of WASM let a change in host load skew the ratio (a re-run gave
+  16.65x against a first 43.53x). The bench now runs `--rounds N` rounds (default 5, minimum 3). Each round measures webgpu
+  and wasm back to back, alternating which goes first. Every round's medians are in `latest.json` under `rounds`.
+- Headline: the median of the per-round speedups (`wasm.run.median / webgpu.run.median` per round, the lower median if the
+  count is even). `webgpu` and `wasm` in the JSON are that round's results. Rounded to 2 decimals in the JSON and rounded down to a whole
   number in the README's first line ("Nx"). The README table shows both medians, both p90s, thread count, GPU, Chrome
   version and date.
 - The design doc's "POST results to the dev server" is dropped. The runner reads the result object with `page.evaluate`.
